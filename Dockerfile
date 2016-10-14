@@ -1,25 +1,30 @@
 FROM jboss/wildfly:latest
 
-# Add customization folder
-COPY customization /opt/jboss/wildfly/customization/
+ENV WILDFLY_MANAGEMENT_USER admin
+ENV WILDFLY_MANAGEMENT_PASSWORD admin
+ENV MODCLUSTER_HOST modcluster
+ENV MODCLUSTER_PORT 80
+ENV ARTIFACT_NAME node-info.war
 
-ADD node-info.war /opt/jboss/wildfly/standalone/deployments/
+ADD ${ARTIFACT_NAME} /opt/jboss/wildfly/standalone/deployments/
 
-RUN /opt/jboss/wildfly/bin/add-user.sh admin admin --silent
+# Add the docker entrypoint script
+ADD entrypoint.sh /opt/jboss/wildfly/bin/entrypoint.sh
+ADD commands.cli /opt/jboss/wildfly/bin/commands.cli
 
 # Change the ownership of added files/dirs to `jboss`
 USER root
-
-# Run customization scripts as root
-RUN chmod +x /opt/jboss/wildfly/customization/execute.sh
-RUN /opt/jboss/wildfly/customization/execute.sh standalone standalone-ha.xml
 
 # Fix for Error: Could not rename /opt/jboss/wildfly/standalone/configuration/standalone_xml_history/current
 RUN rm -rf /opt/jboss/wildfly/standalone/configuration/standalone_xml_history
 
 RUN chown -R jboss:jboss /opt/jboss/wildfly
+RUN chmod +x /opt/jboss/wildfly/bin/entrypoint.sh
+RUN chmod +x /opt/jboss/wildfly/bin/commands.cli
 USER jboss
 
 EXPOSE 8080 9990 8009
 
-CMD /opt/jboss/wildfly/bin/standalone.sh -b 0.0.0.0 -bmanagement 0.0.0.0 -c standalone-ha.xml
+EXPOSE 23364/udp
+
+ENTRYPOINT ["/opt/jboss/wildfly/bin/entrypoint.sh"]
