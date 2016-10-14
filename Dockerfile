@@ -1,5 +1,8 @@
 FROM jboss/wildfly:latest
 
+# Add customization folder
+COPY customization /opt/jboss/wildfly/customization/
+
 ADD node-info.war /opt/jboss/wildfly/standalone/deployments/
 
 RUN /opt/jboss/wildfly/bin/add-user.sh admin admin --silent
