@@ -1,0 +1,10 @@
+# Mark the commands below to be run as a batch
+batch
+
+#Configure mod_cluster
+/subsystem=modcluster/mod-cluster-config=configuration/:write-attribute(name=advertise,value=false
+/subsystem=modcluster/mod-cluster-config=configuration/:write-attribute(name=proxies,value=[proxy1]
+/socket-binding-group=standard-sockets/remote-destination-outbound-socket-binding=proxy1:add(host=${modcluster.host:modcluster},port=${modcluster.port:80}
+
+#Execute the batch
+run-batch
