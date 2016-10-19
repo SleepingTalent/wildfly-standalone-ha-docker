@@ -24,10 +24,19 @@ ${JBOSS_HOME}/bin/standalone.sh -c standalone-ha.xml > /dev/null &
 echo "=> configuration-process: waiting for the server to boot"
 wait_for_server
 
+echo "=> HOSTNAME $HOSTNAME"
+
 echo "=> configuration-process:  executing the commands"
 ${JBOSS_HOME}/bin/jboss-cli.sh -c --file=`dirname "$0"`/commands.cli
 
 echo "=> configuration-process: shutting down WildFly"
 ${JBOSS_HOME}/bin/jboss-cli.sh -c ":shutdown"
 
-exec ${JBOSS_HOME}/bin/standalone.sh -b 0.0.0.0 -bmanagement 0.0.0.0 -c standalone-ha.xml
+
+IPADDR=$(ip a s | sed -ne '/127.0.0.1/!{s/^[ \t]*inet[ \t]*\([0-9.]\+\)\/.*$/\1/p}')
+
+echo "=> Starting Standalone Wildfly with HOSTNAME:IPAddress : $HOSTNAME:$IPADDR"
+
+exec ${JBOSS_HOME}/bin/standalone.sh -c standalone-ha.xml -Djboss.bind.address=$IPADDR -Djboss.bind.address.management=$IPADDR -Djboss.bind.address.private=$IPADDR -Djboss.node.name=$HOSTNAME-$IPADDR
+
+#exec ${JBOSS_HOME}/bin/standalone.sh -b $HOSTNAME -bmanagement $HOSTNAME -c standalone-ha.xml
